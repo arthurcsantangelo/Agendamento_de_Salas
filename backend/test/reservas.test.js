@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { existeConflito, horariosConflitam } from '../src/reservas.js';
+import {
+    cabeNaSala,
+    existeConflito,
+    horariosConflitam
+} from '../src/reservas.js';
 
 const novaReserva = {
     sala_id: 1,
@@ -8,6 +12,31 @@ const novaReserva = {
     data_fim: '2026-11-02 10:00:00',
     situacao: 'pendente'
 };
+
+const salas = [
+    { id: 1, nome: 'Sala Horizonte', capacidade: 30 },
+    { id: 2, nome: 'Sala Inovacao', capacidade: 20 }
+];
+
+test('cabeNaSala retorna true quando a turma e menor que a capacidade', () => {
+    assert.equal(cabeNaSala(25, 1, salas), true);
+});
+
+test('cabeNaSala retorna true quando a turma e igual a capacidade', () => {
+    assert.equal(cabeNaSala(30, 1, salas), true);
+});
+
+test('cabeNaSala retorna false quando a turma excede a capacidade', () => {
+    assert.equal(cabeNaSala(31, 1, salas), false);
+});
+
+test('cabeNaSala retorna false quando a sala nao existe', () => {
+    assert.equal(cabeNaSala(10, 99, salas), false);
+});
+
+test('cabeNaSala compara identificadores numéricos e textuais', () => {
+    assert.equal(cabeNaSala(20, '2', salas), true);
+});
 
 test('detecta sobreposição na mesma sala e data', () => {
     const reservas = [{

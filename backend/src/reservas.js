@@ -40,6 +40,26 @@ export function horariosConflitam(inicioA, fimA, inicioB, fimB) {
     );
 }
 
+/**
+ * Verifica se uma sala cadastrada comporta a quantidade de alunos informada.
+ *
+ * @param {number} quantidadeAlunos Quantidade de alunos da turma.
+ * @param {string|number} salaId Identificador da sala que será verificada.
+ * @param {Array<{id: string|number, capacidade: number}>} salas Salas cadastradas.
+ * @returns {boolean} `true` quando a sala existe e tem capacidade suficiente.
+ */
+export function cabeNaSala(quantidadeAlunos, salaId, salas) {
+    const sala = salas.find((salaCadastrada) => (
+        String(salaCadastrada.id) === String(salaId)
+    ));
+
+    if (!sala) {
+        return false;
+    }
+
+    return quantidadeAlunos <= sala.capacidade;
+}
+
 export function existeConflito(novaReserva, reservas) {
     if (!novaReserva || typeof novaReserva !== 'object') {
         throw new TypeError('novaReserva deve ser um objeto.');
@@ -49,9 +69,10 @@ export function existeConflito(novaReserva, reservas) {
         throw new TypeError('reservas deve ser uma lista.');
     }
 
-    const inicioNovaReserva = obterDataHora(novaReserva.data_inicio, 'data_inicio');
-    const fimNovaReserva = obterDataHora(novaReserva.data_fim, 'data_fim');
-    if (inicioNovaReserva >= fimNovaReserva) {
+    if (
+        obterDataHora(novaReserva.data_inicio, 'data_inicio')
+        >= obterDataHora(novaReserva.data_fim, 'data_fim')
+    ) {
         throw new RangeError('O fim da nova reserva deve ser posterior ao início.');
     }
 
@@ -71,11 +92,11 @@ export function existeConflito(novaReserva, reservas) {
             return false;
         }
 
-        return intervalosConflitam(
-            inicioNovaReserva,
-            fimNovaReserva,
-            obterDataHora(reserva.data_inicio, 'data_inicio'),
-            obterDataHora(reserva.data_fim, 'data_fim')
+        return horariosConflitam(
+            novaReserva.data_inicio,
+            novaReserva.data_fim,
+            reserva.data_inicio,
+            reserva.data_fim
         );
     });
 }

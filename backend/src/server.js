@@ -10,7 +10,11 @@ const allowedOrigins = (process.env.CORS_ORIGINS
     .filter(Boolean);
 
 const database = createDatabase();
-const app = createApp({ database, allowedOrigins });
+const app = createApp({
+    database,
+    allowedOrigins,
+    authTokenSecret: process.env.AUTH_TOKEN_SECRET
+});
 const server = app.listen(port, () => {
     console.log(`API disponível em http://localhost:${port}`);
 });

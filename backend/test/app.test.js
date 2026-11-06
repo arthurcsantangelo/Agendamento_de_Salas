@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import { createApp } from '../src/app.js';
+import { hashPassword, verifyAccessToken } from '../src/auth.js';
 import { createDatabase } from '../src/database.js';
 
 const servers = new Set();
+const authTokenSecret = 'test-secret-with-at-least-thirty-two-characters';
 
 afterEach(async () => {
     await Promise.all([...servers].map((server) => new Promise((resolve, reject) => {
@@ -19,7 +21,7 @@ afterEach(async () => {
 });
 
 async function startServer(database, allowedOrigins = []) {
-    const server = createApp({ database, allowedOrigins }).listen(0);
+    const server = createApp({ database, allowedOrigins, authTokenSecret }).listen(0);
     servers.add(server);
     await new Promise((resolve, reject) => {
         server.once('listening', resolve);
@@ -86,4 +88,114 @@ test('requires database configuration before creating a connection pool', () => 
         () => createDatabase({}),
         /MYSQL_HOST, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD/
     );
+});
+
+test('requires a strong token secret when creating the application', () => {
+    assert.throws(
+        () => createApp({ database: {}, authTokenSecret: 'short' }),
+        /AUTH_TOKEN_SECRET deve conter pelo menos 32 bytes/
+    );
+});
+
+test('POST /api/auth/login returns an access token and public user data', async () => {
+    const passwordHash = await hashPassword('senha-segura');
+    let lookupEmail;
+    const baseUrl = await startServer({
+        async findUserByEmail(email) {
+            lookupEmail = email;
+            return {
+                id: 42,
+                nome: 'Ana Souza',
+                email: 'ana@example.com',
+                senha_hash: passwordHash
+            };
+        }
+    });
+
+    const response = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: '  Ana@Example.com ', password: 'senha-segura' })
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(lookupEmail, 'ana@example.com');
+    assert.equal(body.tokenType, 'Bearer');
+    assert.equal(body.expiresIn, 3600);
+    assert.deepEqual(body.user, { id: '42', nome: 'Ana Souza', email: 'ana@example.com' });
+    assert.deepEqual(
+        verifyAccessToken(body.token, authTokenSecret).email,
+        'ana@example.com'
+    );
+    assert.equal(Object.hasOwn(body, 'senha_hash'), false);
+});
+
+test('POST /api/auth/login returns the same unauthorized response for unknown users and wrong passwords', async () => {
+    const passwordHash = await hashPassword('senha-segura');
+    const baseUrl = await startServer({
+        async findUserByEmail(email) {
+            return email === 'ana@example.com'
+                ? { id: 42, nome: 'Ana Souza', email, senha_hash: passwordHash }
+                : null;
+        }
+    });
+
+    const responses = await Promise.all(['ana@example.com', 'unknown@example.com'].map((email) => (
+        fetch(`${baseUrl}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: 'senha-errada' })
+        })
+    )));
+
+    assert.deepEqual(responses.map((response) => response.status), [401, 401]);
+    assert.deepEqual(
+        await Promise.all(responses.map((response) => response.json())),
+        [{ error: 'E-mail ou senha inválidos.' }, { error: 'E-mail ou senha inválidos.' }]
+    );
+});
+
+test('POST /api/auth/login validates required fields before querying the database', async () => {
+    let lookupCalls = 0;
+    const baseUrl = await startServer({
+        async findUserByEmail() {
+            lookupCalls += 1;
+            return null;
+        }
+    });
+
+    const response = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'invalido', password: '' })
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: 'Informe um e-mail e uma senha válidos.' });
+    assert.equal(lookupCalls, 0);
+});
+
+test('POST /api/auth/login reports database failures without exposing internals', async () => {
+    const originalConsoleError = console.error;
+    console.error = () => {};
+
+    try {
+        const baseUrl = await startServer({
+            async findUserByEmail() {
+                throw new Error('database connection failed');
+            }
+        });
+
+        const response = await fetch(`${baseUrl}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: 'ana@example.com', password: 'senha-segura' })
+        });
+
+        assert.equal(response.status, 500);
+        assert.deepEqual(await response.json(), { error: 'Não foi possível autenticar.' });
+    } finally {
+        console.error = originalConsoleError;
+    }
 });

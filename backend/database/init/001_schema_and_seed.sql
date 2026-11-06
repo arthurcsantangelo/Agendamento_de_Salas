@@ -35,11 +35,11 @@ SELECT 'Sala Horizonte', 1, 30, JSON_ARRAY('Projetor', 'Quadro branco', 'Ar-cond
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM salas WHERE nome = 'Sala Horizonte')
 UNION ALL
-SELECT 'Sala Inovacao', 2, 20, JSON_ARRAY('Projetor', 'Computadores', 'Ar-condicionado')
+SELECT 'Sala Inovacao', 2, 20, JSON_ARRAY('Computadores', 'Projetor', 'Videoconferencia')
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM salas WHERE nome = 'Sala Inovacao')
 UNION ALL
-SELECT 'Sala Colaborativa', 1, 12, JSON_ARRAY('TV', 'Videoconferencia', 'Quadro branco')
+SELECT 'Sala Colaborativa', 0, 12, JSON_ARRAY('TV', 'Quadro branco', 'Camera para videoconferencia')
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM salas WHERE nome = 'Sala Colaborativa');
 
@@ -51,47 +51,47 @@ INSERT INTO reservas (
     finalidade,
     situacao
 )
-SELECT salas.id, '2026-11-02 08:00:00', '2026-11-02 09:30:00',
-       'Ana Souza', 'Reuniao de planejamento pedagogico', 'aprovada'
+SELECT salas.id, '2026-11-09 08:00:00', '2026-11-09 09:30:00',
+       'Ana Souza', 'Planejamento pedagogico', 'aprovada'
 FROM salas
 WHERE salas.nome = 'Sala Horizonte'
   AND NOT EXISTS (
       SELECT 1 FROM reservas
-      WHERE sala_id = salas.id AND data_inicio = '2026-11-02 08:00:00'
+      WHERE sala_id = salas.id AND data_inicio = '2026-11-09 08:00:00'
   )
 UNION ALL
-SELECT salas.id, '2026-11-02 10:00:00', '2026-11-02 12:00:00',
-       'Bruno Lima', 'Aula de introducao a programacao', 'pendente'
+SELECT salas.id, '2026-11-09 10:00:00', '2026-11-09 12:00:00',
+       'Bruno Lima', 'Aula introdutoria de programacao', 'pendente'
 FROM salas
 WHERE salas.nome = 'Sala Inovacao'
   AND NOT EXISTS (
       SELECT 1 FROM reservas
-      WHERE sala_id = salas.id AND data_inicio = '2026-11-02 10:00:00'
+      WHERE sala_id = salas.id AND data_inicio = '2026-11-09 10:00:00'
   )
 UNION ALL
-SELECT salas.id, '2026-11-03 14:00:00', '2026-11-03 15:00:00',
-       'Carla Mendes', 'Atendimento individual aos estudantes', 'aprovada'
+SELECT salas.id, '2026-11-10 14:00:00', '2026-11-10 15:00:00',
+       'Carla Mendes', 'Atendimento a estudantes', 'aprovada'
 FROM salas
 WHERE salas.nome = 'Sala Colaborativa'
   AND NOT EXISTS (
       SELECT 1 FROM reservas
-      WHERE sala_id = salas.id AND data_inicio = '2026-11-03 14:00:00'
+      WHERE sala_id = salas.id AND data_inicio = '2026-11-10 14:00:00'
   )
 UNION ALL
-SELECT salas.id, '2026-11-04 09:00:00', '2026-11-04 11:00:00',
+SELECT salas.id, '2026-11-11 09:00:00', '2026-11-11 11:00:00',
        'Diego Alves', 'Oficina de ciencias', 'pendente'
 FROM salas
 WHERE salas.nome = 'Sala Horizonte'
   AND NOT EXISTS (
       SELECT 1 FROM reservas
-      WHERE sala_id = salas.id AND data_inicio = '2026-11-04 09:00:00'
+      WHERE sala_id = salas.id AND data_inicio = '2026-11-11 09:00:00'
   )
 UNION ALL
-SELECT salas.id, '2026-11-05 13:30:00', '2026-11-05 15:00:00',
+SELECT salas.id, '2026-11-12 13:30:00', '2026-11-12 15:00:00',
        'Elisa Rocha', 'Capacitacao de equipe', 'cancelada'
 FROM salas
 WHERE salas.nome = 'Sala Inovacao'
   AND NOT EXISTS (
       SELECT 1 FROM reservas
-      WHERE sala_id = salas.id AND data_inicio = '2026-11-05 13:30:00'
+      WHERE sala_id = salas.id AND data_inicio = '2026-11-12 13:30:00'
   );

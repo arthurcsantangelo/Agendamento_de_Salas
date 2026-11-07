@@ -14,6 +14,12 @@
         <h1>reserve me</h1>
         
         <form id="loginForm" novalidate>
+            <div class="input-group" id="nameGroup" hidden>
+                <label for="name">Nome</label>
+                <span id="nameError" class="error-message">Informe seu nome.</span>
+                <input type="text" id="name" name="name" placeholder="Seu nome" autocomplete="name" maxlength="160" aria-describedby="nameError">
+            </div>
+
             <div class="input-group">
                 <label for="email">E-mail</label>
                 <span id="emailError" class="error-message">Informe um e-mail válido.</span>
@@ -23,13 +29,22 @@
             <div class="input-group">
                 <label for="password">Senha</label>
                 <span id="passwordError" class="error-message">Informe sua senha.</span>
-                <input type="password" id="password" name="password" placeholder="Sua senha" autocomplete="current-password" aria-describedby="passwordError" required>
+                <input type="password" id="password" name="password" placeholder="Sua senha" autocomplete="current-password" maxlength="128" aria-describedby="passwordError" required>
+            </div>
+
+            <div class="input-group" id="confirmPasswordGroup" hidden>
+                <label for="confirmPassword">Confirme sua senha</label>
+                <span id="confirmPasswordError" class="error-message">As senhas devem ser iguais.</span>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Digite a senha novamente" autocomplete="new-password" maxlength="128" aria-describedby="confirmPasswordError">
             </div>
 
             <p id="loginValidationMessage" class="form-error" role="alert" aria-live="assertive"></p>
             <button type="submit" id="submitBtn">Entrar</button>
-            
-            <a href="recuperar-senha.html" class="recovery-link">Esqueceu sua senha?</a>
+            <p class="mode-switch">
+                <span id="modePrompt">Ainda não tem uma conta?</span>
+                <button type="button" id="toggleModeBtn" class="mode-toggle" aria-controls="nameGroup confirmPasswordGroup" aria-expanded="false">Criar conta</button>
+            </p>
+            <a href="recuperar-senha.html" class="recovery-link" id="recoveryLink">Esqueceu sua senha?</a>
         </form>
     </main>
 

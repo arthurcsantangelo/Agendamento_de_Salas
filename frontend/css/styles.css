@@ -96,6 +96,10 @@ input:focus-visible {
     margin-bottom: 18px;
 }
 
+.input-group[hidden] {
+    display: none;
+}
+
 .input-group label {
     margin-bottom: 7px;
     color: var(--color-text);
@@ -165,6 +169,33 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
+    background-color: var(--color-button-hover);
+}
+
+.mode-switch {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 0 0 16px;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+}
+
+.mode-toggle {
+    min-height: 36px;
+    padding: 6px 12px;
+    border: 1px solid var(--color-border);
+    clip-path: var(--button-cut);
+    background-color: var(--color-input);
+    color: var(--color-text);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+}
+
+.mode-toggle:hover {
     background-color: var(--color-button-hover);
 }
 

@@ -30,12 +30,12 @@ inicializacao nao apaga nem substitui dados existentes. Scripts da pasta de
 inicializacao do MySQL sao executados automaticamente somente quando o volume
 do banco e criado pela primeira vez.
 
-## Login
+## Login e cadastro
 
-As contas não têm cadastro público. Para provisionar uma conta, execute
-`npm run user:create` em um terminal interativo. O comando solicita o e-mail,
-nome e senha sem exibir a senha digitada; senhas precisam ter de 12 a 128
-caracteres. Senhas são armazenadas com scrypt e salt aleatório.
+O formulário do frontend permite criar conta e entrar. O cadastro exige nome,
+e-mail válido e senha de 12 a 128 caracteres; senhas são armazenadas com scrypt
+e salt aleatório. Também é possível provisionar uma conta com
+`npm run user:create` em um terminal interativo.
 
 Se o volume MySQL já existia antes da adição da tabela de usuários, aplique a
 migração uma vez:
@@ -78,6 +78,21 @@ Credenciais incorretas retornam `401` com a mesma mensagem para e-mails
 cadastrados e inexistentes. Campos inválidos retornam `400`; falhas no banco
 retornam `500` sem expor detalhes internos. Envie o token em
 `Authorization: Bearer <token>` nos endpoints que forem protegidos pela API.
+
+### `POST /api/auth/register`
+
+Cria uma conta e retorna `201`. Envie `Content-Type: application/json` com:
+
+```json
+{
+  "nome": "Ana Souza",
+  "email": "ana@example.com",
+  "password": "uma-senha-segura"
+}
+```
+
+E-mail inválido, nome vazio ou senha fora do limite retornam `400`; e-mail já
+cadastrado retorna `409`.
 
 As funções exportadas em `src/auth.js`, `src/app.js` e `src/database.js` têm
 comentários JSDoc com tipos e descrições dos parâmetros e retornos.

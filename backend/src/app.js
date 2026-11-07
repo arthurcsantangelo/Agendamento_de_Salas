@@ -3,6 +3,7 @@ import express from 'express';
 import {
     checkUnknownUserPassword,
     createAccessToken,
+    hashPassword,
     normalizeEmail,
     validateTokenSecret,
     verifyPassword
@@ -39,6 +40,48 @@ export function createApp({ database, allowedOrigins = [], authTokenSecret }) {
         } catch (error) {
             console.error('Falha ao verificar conexão com o banco de dados:', error);
             response.status(503).json({ status: 'error', database: 'unavailable' });
+        }
+    });
+
+    app.post('/api/auth/register', async (request, response) => {
+        const body = request.body ?? {};
+        const nome = typeof body.nome === 'string' ? body.nome.trim() : '';
+        const email = normalizeEmail(body.email);
+        const { password } = body;
+
+        if (
+            nome.length === 0
+            || nome.length > 160
+            || !email
+            || typeof password !== 'string'
+            || password.length < 12
+            || password.length > 128
+            || Buffer.byteLength(password, 'utf8') > 1024
+        ) {
+            response.status(400).json({
+                error: 'Informe nome, e-mail válido e senha com 12 a 128 caracteres.'
+            });
+            return;
+        }
+
+        try {
+            await database.createUser({
+                nome,
+                email,
+                senhaHash: await hashPassword(password)
+            });
+            response.status(201).json({
+                message: 'Conta criada com sucesso.',
+                user: { nome, email }
+            });
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                response.status(409).json({ error: 'Já existe uma conta com esse e-mail.' });
+                return;
+            }
+
+            console.error('Falha ao criar conta:', error);
+            response.status(500).json({ error: 'Não foi possível criar a conta.' });
         }
     });
 
